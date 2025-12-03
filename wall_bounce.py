@@ -9,9 +9,19 @@ red = Pin(5, mode= Pin.OUT )
 green = Pin(6, mode= Pin.OUT)
 blue = Pin(7, mode= Pin.OUT)
 button = Pin(19, Pin.IN, Pin.PULL_DOWN)
+
+light = "green"
 mode = 0
+work_time = 0
 
 
+def toggle_mode():
+    global mode
+    mode = mode + 1
+    print("mode ->", mode)
+    if mode > 1:
+        mode = 0
+button.irq(trigger= Pin.IRQ_FALLING, handler = toggle_mode())
 
 def avoid_wall():
     motors.linear_backward(speed= 1)
@@ -50,9 +60,9 @@ def wall_detection_check():
             LED('off')
             first = True
             
-def pause_mode(led): #fades the led 
+def pause_mode(): #fades the led 
     motors.stop()
-    led_pwm = PWM(led)
+    led_pwm = PWM(light)
     led_pwm.freq(1000)
     steps = 256
     step_delay_us = int((500000) / (65535 / steps))
@@ -82,25 +92,34 @@ def Desired_range(DesiredRange):
     #isWallInRange = (CurrentRange == DesiredRange)
     if isWallInRange:
         motors.stop
-    return isWallInRange    
+    return isWallInRange
 
 def work_mode():
-    
+    global work_time
     motors.linear_forward(speed = 1)
-    while True:
-        start = ticks_ms()
-        work_time += ticks_diff(ticks_ms(), start)
-        if Desired_range(.25):
-            avoid_wall()
-        if work_time < 45000:
-            LED("green")
-        if work_time > 45000:
-            LED("blue")
-        if work_time > 55000:
-            low_battery()
+    start = ticks_ms()
+    work_time += ticks_diff(ticks_ms(), start)
+    if Desired_range(.25):
+        avoid_wall()
+    if work_time < 45000:
+        light = "green"
+        LED(light)
+    if work_time > 45000 and work_time < 55000:
+        light = "blue"
+        LED(light)
+    if work_time > 55000:
+        low_battery()
             
 
-            
+while mode == 0:
+    if mode != 0:
+        break
+    pause_mode()
+while mode == 1:
+    if mode != 1:
+        break
+    work_mode()
+         
             
         
             
