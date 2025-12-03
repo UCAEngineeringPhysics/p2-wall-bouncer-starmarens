@@ -72,7 +72,9 @@ def pause_mode(led): #fades the led
 
 def low_battery():
     LED("red")
-    sleep()
+    sleep(1/5)
+    turn_off_leds()
+    sleep(1/5)
     
 def Desired_range(DesiredRange):
     CurrentRange = sensor.distance
@@ -83,16 +85,21 @@ def Desired_range(DesiredRange):
     return isWallInRange    
 
 def work_mode():
-    LED("green")
+    
     motors.linear_forward(speed = 1)
     while True:
         start = ticks_ms()
         work_time += ticks_diff(ticks_ms(), start)
         if Desired_range(.25):
             avoid_wall()
+        if work_time < 45000:
+            LED("green")
         if work_time > 45000:
             LED("blue")
         if work_time > 55000:
+            low_battery()
+            
+
             
             
         
