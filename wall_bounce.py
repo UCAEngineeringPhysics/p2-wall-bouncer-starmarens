@@ -1,27 +1,29 @@
 from dual_motor_driver import DualMotorDriver
 from picozero import DistanceSensor
-from machine import Pin, PWM
+from machine import Pin, PWM, reset
 from utime import *
 
-motors = DualMotorDriver(right_ids=(10,9,11), left_ids=(14.13,15), stby_id= 12)
-sensor = DistanceSensor(trigger = 21, echo= 22)
-red = Pin(5, mode= Pin.OUT )
-green = Pin(6, mode= Pin.OUT)
-blue = Pin(7, mode= Pin.OUT)
-button = Pin(19, Pin.IN, Pin.PULL_DOWN)
+motors = DualMotorDriver(right_ids=(15,14,13), left_ids=(16,17,18), stby_id= 12)
+sensor = DistanceSensor(trigger = 9, echo= 8)
+red = Pin(28, mode= Pin.OUT )
+green = Pin(27, mode= Pin.OUT)
+blue = Pin(26, mode= Pin.OUT)
+button = Pin(22, Pin.IN, Pin.PULL_DOWN)
 
 light = "green"
 mode = 0
 work_time = 0
+accumulated_off_timer = 0
+speed = .5
 
-
-def toggle_mode():
+def toggle_mode(hi):
     global mode
     mode = mode + 1
     print("mode ->", mode)
     if mode > 1:
         mode = 0
-button.irq(trigger= Pin.IRQ_FALLING, handler = toggle_mode())
+
+button.irq(trigger= Pin.IRQ_FALLING, handler = toggle_mode)
 
 def avoid_wall():
     motors.linear_backward(speed= 1)
@@ -53,16 +55,18 @@ def LED(color):
 #checks if sensor is reading and checks if button works        
 def wall_detection_check(): 
     dist = sensor.distance
-    if dist != None and button.value == 0:
+    if dist is not None and button.value() == 0:
         for i in range(10):
             LED('on')
             sleep(1/5)
-            LED('off')
-            first = True
+            turn_off_leds()
+    else:
+        print("sensor not working")
+            
             
 def pause_mode(): #fades the led 
     motors.stop()
-    led_pwm = PWM(light)
+    led_pwm = PWM(green)
     led_pwm.freq(1000)
     steps = 256
     step_delay_us = int((500000) / (65535 / steps))
@@ -81,17 +85,27 @@ def pause_mode(): #fades the led
     led_pwm.deinit()
 
 def low_battery():
+    global accumulated_off_timer
+    global speed
+    speed = speed/2
+    off_timer = ticks_ms()
     LED("red")
     sleep(1/5)
     turn_off_leds()
     sleep(1/5)
-    
+    accumulated_off_timer += ticks_diff(ticks_ms(), off_timer)
+    if accumulated_off_timer >= 5:
+        reset()
+
 def Desired_range(DesiredRange):
     CurrentRange = sensor.distance
+    print(CurrentRange)
+    if CurrentRange is None:
+        return False
     isWallInRange = (DesiredRange - 0.05 <= CurrentRange <= DesiredRange + 0.05)
     #isWallInRange = (CurrentRange == DesiredRange)
     if isWallInRange:
-        motors.stop
+        motors.stop()
     return isWallInRange
 
 def work_mode():
@@ -99,7 +113,7 @@ def work_mode():
     motors.linear_forward(speed = 1)
     start = ticks_ms()
     work_time += ticks_diff(ticks_ms(), start)
-    if Desired_range(.25):
+    if Desired_range(.10):
         avoid_wall()
     if work_time < 45000:
         light = "green"
@@ -110,16 +124,13 @@ def work_mode():
     if work_time > 55000:
         low_battery()
             
-
-while mode == 0:
-    if mode != 0:
-        break
-    pause_mode()
-while mode == 1:
-    if mode != 1:
-        break
-    work_mode()
-         
+wall_detection_check()
+while True:
+    if mode == 0:
+        pause_mode()
+    if mode == 1:
+        work_mode()
+        
             
         
             
