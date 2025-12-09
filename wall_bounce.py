@@ -3,7 +3,7 @@ from picozero import DistanceSensor
 from machine import Pin, PWM, reset
 from utime import *
 
-motors = DualMotorDriver(right_ids=(15,14,13), left_ids=(16,17,18), stby_id= 12)
+motors = DualMotorDriver(right_ids=(15,13,14), left_ids=(16,18,17), stby_id= 12)
 sensor = DistanceSensor(trigger = 9, echo= 8)
 red = Pin(28, mode= Pin.OUT )
 green = Pin(27, mode= Pin.OUT)
@@ -12,14 +12,17 @@ button = Pin(22, Pin.IN, Pin.PULL_DOWN)
 
 light = "green"
 mode = 0
-work_time = 0
+start_time = 0
 accumulated_off_timer = 0
 speed = .5
 
 def toggle_mode(hi):
-    global mode
+    global mode, start_time
     mode = mode + 1
     print("mode ->", mode)
+    if mode == 1:
+        start_time = ticks_ms()
+    
     if mode > 1:
         mode = 0
 
@@ -83,6 +86,7 @@ def pause_mode(): #fades the led
         led_pwm.duty_u16(i)
         sleep_us(step_delay_us)
     led_pwm.deinit()
+    green.init(mode= Pin.OUT)
 
 def low_battery():
     global accumulated_off_timer
@@ -93,8 +97,8 @@ def low_battery():
     sleep(1/5)
     turn_off_leds()
     sleep(1/5)
-    accumulated_off_timer += ticks_diff(ticks_ms(), off_timer)
-    if accumulated_off_timer >= 5:
+    accumulated_off_timer = ticks_diff(ticks_ms(), off_timer)
+    if accumulated_off_timer >= 5000:
         reset()
 
 def Desired_range(DesiredRange):
@@ -109,19 +113,18 @@ def Desired_range(DesiredRange):
     return isWallInRange
 
 def work_mode():
-    global work_time
+    global start_time
     motors.linear_forward(speed = 1)
-    start = ticks_ms()
-    work_time += ticks_diff(ticks_ms(), start)
+    work_time = ticks_diff(ticks_ms(), start_time)
     if Desired_range(.10):
         avoid_wall()
     if work_time < 45000:
         light = "green"
         LED(light)
-    if work_time > 45000 and work_time < 55000:
+    elif work_time > 45000 and work_time < 55000:
         light = "blue"
         LED(light)
-    if work_time > 55000:
+    elif work_time > 55000:
         low_battery()
             
 wall_detection_check()
