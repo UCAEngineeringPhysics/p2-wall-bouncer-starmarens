@@ -13,6 +13,7 @@ button = Pin(22, Pin.IN, Pin.PULL_DOWN)
 light = "green"
 mode = 0
 start_time = 0
+shut_off = 0
 accumulated_off_timer = 0
 speed = .5
 
@@ -28,12 +29,12 @@ def toggle_mode(hi):
 
 button.irq(trigger= Pin.IRQ_FALLING, handler = toggle_mode)
 
-def avoid_wall():
-    motors.linear_backward(speed= .5)
+def avoid_wall(speed):
+    motors.linear_backward(speed)
     sleep(.4)
-    motors.spin_left(speed = .5)
-    sleep(.25)
-    motors.linear_forward(speed = .5)
+    motors.spin_left(speed)
+    sleep(.45)
+    motors.linear_forward(speed)
 
 def turn_off_leds():
     red.off()
@@ -89,24 +90,23 @@ def pause_mode(): #fades the led
     green.init(mode= Pin.OUT)
 
 def low_battery():
-    global accumulated_off_timer
-    global speed
-    speed = speed / 2
-    off_timer = ticks_ms()
+    global shut_off
     LED("red")
     sleep(1/5)
+    shut_off = shut_off + 1
     turn_off_leds()
     sleep(1/5)
-    accumulated_off_timer = ticks_diff(ticks_ms(), off_timer)
-    if accumulated_off_timer >= 5000:
+    shut_off = shut_off + 1
+    if shut_off >= 50:
         reset()
+    
 
 def Desired_range(DesiredRange):
     CurrentRange = sensor.distance
     print(CurrentRange)
     if CurrentRange is None:
         return False
-    isWallInRange = (DesiredRange - 0.05 <= CurrentRange <= DesiredRange + 0.05)
+    isWallInRange = (CurrentRange <= DesiredRange + 0.05)
     #isWallInRange = (CurrentRange == DesiredRange)
     if isWallInRange:
         motors.stop()
@@ -114,18 +114,24 @@ def Desired_range(DesiredRange):
 
 def work_mode():
     global start_time
-    motors.linear_forward(speed = .5)
+    speed = .5
     work_time = ticks_diff(ticks_ms(), start_time)
-    if Desired_range(.2):
-        avoid_wall()
     if work_time < 45000:
+        motors.linear_forward(speed = speed)
         light = "green"
         LED(light)
+        if Desired_range(.2):
+            avoid_wall(speed)
     elif work_time > 45000 and work_time < 55000:
+        motors.linear_forward(speed/2)
         light = "blue"
         LED(light)
+        if Desired_range(.4):
+            avoid_wall(speed/2)
     elif work_time > 55000:
         low_battery()
+        if Desired_range(.3):
+            avoid_wall(speed/2)
             
 wall_detection_check()
 while True:

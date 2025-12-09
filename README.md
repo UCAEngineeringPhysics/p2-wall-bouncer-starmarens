@@ -101,3 +101,4 @@ Use a [flowchart](https://en.wikipedia.org/wiki/Flowchart) or a [algorithm/pseud
 > The goal is using this robot to cover a rectangle-shape area.
 > Do your research, make reasonable assumptions and propose a path pattern for the robot to follow.
 > Please state why this pattern is energy efficient.  
+ The most energy-efficient pattern for a rectangle-shape area is the Boustrophedon Path (Snake-like path) oriented along the longest dimension. This is the most efficient because it minimizes the amount of turns the robot has to make.
