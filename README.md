@@ -1,3 +1,4 @@
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/LMWu6GmP)
 # Project 2: Wall Bouncer
 
 ## Background
@@ -87,16 +88,26 @@ Major required components are listed below:
 > [!TIP]
 > - You may want to checkout TechDraw of FreeCAD. Other CAD software should have the similar tools.  
 > - Hand drawings are acceptable.
+![base](base_sheet-1.png)
+![bracket](motor_bracket_sheet-1.png)
+![roller](rollerMod_sheet-1.png)
+![rim](Wheel_Rim_sheet-1.png)
+![tire](wheel_tire_Drawing_v1-1.png)
+
 
 #### 3.2 (10%) Wiring Diagram: attach a drawing to illustrate electrical components' wiring.
 - Specify power wires using red and black wires.
 - Mark out employed signal pins' names.
 - Electronic components' values have to match your actual circuit.
+![wiring](wiring.png)
 
 #### 3.3 (6%) Software Design
 Use a [flowchart](https://en.wikipedia.org/wiki/Flowchart) or a [algorithm/pseudocode table](https://www.overleaf.com/learn/latex/Algorithms) or a [itemized list](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#lists) to explain your wall avoidance strategy.
+![flowchart](diagram.png)
+>used ai to make this
 
 #### 3.4 (4%) Energy Efficient Path Planning 
 > The goal is using this robot to cover a rectangle-shape area.
 > Do your research, make reasonable assumptions and propose a path pattern for the robot to follow.
 > Please state why this pattern is energy efficient.  
+ The most energy-efficient pattern for a rectangle-shape area is the Boustrophedon Path (Snake-like path) oriented along the longest dimension. This is the most efficient because it minimizes the amount of turns the robot has to make.
